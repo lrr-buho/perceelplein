@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PerceelPlein — grond kopen op kavelniveau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F1E8;
+    --paper-line:#e6dfcd;
+    --ink:#242820;
+    --ink-soft:#63604f;
+    --terracotta:#B85C2E;
+    --terracotta-dark:#963f18;
+    --sage:#5F7052;
+    --sage-soft:#DCE3D1;
+    --gold:#C99A3B;
+    --locked:#a9a196;
+    --card-bg:#FCFAF3;
+    --shadow: 0 1px 0 rgba(36,40,32,0.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size: 34px 34px;
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  /* ---------- top bar ---------- */
+  header{
+    position:sticky; top:0; z-index:40;
+    background:rgba(245,241,232,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom:1px solid var(--paper-line);
+  }
+  .bar{
+    max-width:1180px; margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px;
+    gap:20px;
+  }
+  .wordmark{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:22px;
+    letter-spacing:-0.01em;
+  }
+  .wordmark .glyph{
+    width:26px; height:26px;
+    display:block;
+  }
+  .wordmark small{
+    display:block;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:500;
+    font-size:11px;
+    color:var(--ink-soft);
+    letter-spacing:0.02em;
+  }
+
+  .account-switcher{
+    display:flex; align-items:center; gap:10px;
+    font-size:13px;
+  }
+  .role-pills{
+    display:flex; background:var(--card-bg); border:1px solid var(--paper-line);
+    border-radius:8px; padding:3px; gap:2px;
+  }
+  .role-pill{
+    border:none; background:transparent; cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:12.5px; font-weight:500;
+    color:var(--ink-soft);
+    padding:6px 11px; border-radius:6px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .role-pill.active{ background:var(--terracotta); color:#fff; }
+  .role-pill:hover:not(.active){ background:var(--sage-soft); color:var(--ink); }
+
+  .status-chip{
+    font-size:11.5px; padding:5px 10px; border-radius:100px;
+    font-weight:500; white-space:nowrap;
+  }
+  .status-chip.guest{ background:var(--sage-soft); color:var(--sage); }
+  .status-chip.pending{ background:#f1e2c4; color:#8a641c; }
+  .status-chip.approved{ background:#dcece0; color:#2f6b41; }
+  .status-chip.admin{ background:#e7d9ee; color:#6a3c8c; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    max-width:1180px; margin:0 auto;
+    padding:56px 28px 34px;
+    display:grid; grid-template-columns: 1.3fr 1fr; gap:48px;
+    align-items:end;
+  }
+  .hero h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(34px, 4.4vw, 54px);
+    line-height:1.04;
+    letter-spacing:-0.015em;
+    margin:0 0 18px;
+  }
+  .hero h1 em{
+    font-style:italic; color:var(--terracotta);
+  }
+  .hero p{
+    font-size:15.5px; line-height:1.6; color:var(--ink-soft);
+    max-width:46ch; margin:0;
+  }
+  .hero-stats{
+    display:flex; flex-direction:column; gap:14px;
+    border-left:1px solid var(--paper-line);
+    padding-left:28px;
+  }
+  .stat{ display:flex; align-items:baseline; gap:10px; }
+  .stat .n{ font-family:'Fraunces', serif; font-size:26px; font-weight:500; }
+  .hero-stats .stat:nth-child(1) .n, .hero-stats .stat:nth-child(2) .n{ font-size:46px; }
+  .hero-stats .stat:nth-child(3) .n{ font-size:30px; }
+  .stat .l{ font-size:12.5px; color:var(--ink-soft); }
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    max-width:1180px; margin:0 auto;
+    padding:0 28px 18px;
+    display:flex; align-items:center; gap:14px;
+    flex-wrap:wrap;
+  }
+  .search{
+    flex:1; min-width:220px;
+    display:flex; align-items:center; gap:8px;
+    background:var(--card-bg); border:1px solid var(--paper-line);
+    border-radius:9px; padding:9px 14px;
+  }
+  .search input{
+    border:none; background:transparent; outline:none;
+    font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:var(--ink);
+    width:100%;
+  }
+  .search input::placeholder{ color:var(--locked); }
+  select{
+    font-family:'IBM Plex Sans', sans-serif; font-size:13.5px;
+    background:var(--card-bg); border:1px solid var(--paper-line);
+    border-radius:9px; padding:9px 12px; color:var(--ink); cursor:pointer;
+  }
+  .count-note{ font-size:12.5px; color:var(--ink-soft); white-space:nowrap; }
+
+  /* ---------- pagination ---------- */
+  .pagination{
+    max-width:1180px; margin:0 auto; padding:6px 28px 70px;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    flex-wrap:wrap;
+  }
+  .page-btn{
+    min-width:34px; height:34px; padding:0 10px;
+    border-radius:8px; border:1px solid var(--paper-line);
+    background:var(--card-bg); color:var(--ink-soft);
+    font-family:'IBM Plex Sans', sans-serif; font-size:13px; font-weight:500;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .page-btn:hover:not(:disabled):not(.active){ background:var(--sage-soft); color:var(--ink); }
+  .page-btn.active{ background:var(--terracotta); border-color:var(--terracotta); color:#fff; }
+  .page-btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .page-ellipsis{ color:var(--locked); padding:0 4px; font-size:13px; }
+
+  /* ---------- banners ---------- */
+  .banner{
+    max-width:1180px; margin:0 auto 22px; padding:0 28px;
+  }
+  .banner-inner{
+    border-radius:10px; padding:13px 18px;
+    font-size:13.5px; display:flex; align-items:center; gap:10px;
+  }
+  .banner-inner.pending{ background:#f1e2c4; color:#6b4c15; }
+  .banner-inner.admin{ background:#e7d9ee; color:#4d2a68; }
+  .banner-inner b{ font-weight:600; }
+
+  /* ---------- grid ---------- */
+  .grid{
+    max-width:1180px; margin:0 auto;
+    padding:4px 28px 90px;
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(252px, 1fr));
+    gap:18px;
+  }
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--paper-line);
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+    display:flex; flex-direction:column;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(36,40,32,0.08); }
+
+  .thumb{
+    position:relative;
+    aspect-ratio: 4 / 3;
+    background:
+      linear-gradient(#efe9d8 1px, transparent 1px),
+      linear-gradient(90deg, #efe9d8 1px, transparent 1px),
+      #f9f6ec;
+    background-size:12px 12px;
+  }
+  .thumb svg{ width:100%; height:100%; display:block; }
+  .thumb .badge-num{
+    position:absolute; top:9px; left:9px;
+    background:rgba(36,40,32,0.78); color:#fff;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px; padding:3px 7px; border-radius:5px; letter-spacing:.02em;
+  }
+  .thumb .badge-locked{
+    position:absolute; top:9px; right:9px;
+    background:rgba(255,255,255,0.88);
+    color:var(--ink-soft);
+    width:24px; height:24px; border-radius:100px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .card-body{ padding:14px 15px 15px; display:flex; flex-direction:column; gap:9px; flex:1; }
+  .gemeente{ font-family:'Fraunces', serif; font-weight:500; font-size:17px; line-height:1.15; }
+  .meta-row{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; color:var(--ink-soft); }
+  .opp{ font-weight:600; color:var(--ink); }
+
+  .kadaster-line{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    padding:8px 10px;
+    border-radius:7px;
+    background:var(--sage-soft);
+    color:#3c4a33;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .kadaster-line.locked{
+    background:#efece2;
+    color:var(--locked);
+  }
+  .kadaster-line.locked .blur{
+    filter:blur(4px);
+    user-select:none;
+  }
+  .lock-note{ font-size:10.5px; color:var(--locked); display:flex; align-items:center; gap:5px; }
+
+  .card-cta{
+    margin-top:auto;
+    display:flex; gap:8px;
+  }
+  button.primary, a.primary{
+    flex:1;
+    border:none; cursor:pointer;
+    background:var(--terracotta); color:#fff;
+    font-family:'IBM Plex Sans', sans-serif; font-weight:500; font-size:13px;
+    padding:10px 12px; border-radius:8px;
+    text-align:center; text-decoration:none;
+    transition:background .15s ease;
+  }
+  button.primary:hover, a.primary:hover{ background:var(--terracotta-dark); }
+  button.secondary{
+    flex:1;
+    border:1px solid var(--paper-line); cursor:pointer;
+    background:transparent; color:var(--ink-soft);
+    font-family:'IBM Plex Sans', sans-serif; font-weight:500; font-size:13px;
+    padding:10px 12px; border-radius:8px;
+  }
+  button.secondary:hover{ background:var(--sage-soft); color:var(--ink); }
+  button:disabled{ opacity:.55; cursor:not-allowed; }
+
+  /* ---------- admin panel ---------- */
+  .admin-panel{
+    max-width:1180px; margin:0 auto 30px; padding:0 28px;
+  }
+  .admin-card{
+    background:var(--card-bg); border:1px solid var(--paper-line); border-radius:12px;
+    padding:6px 0;
+  }
+  .admin-card h3{
+    font-family:'Fraunces', serif; font-weight:500; font-size:17px;
+    margin:0; padding:16px 20px 10px;
+  }
+  .req-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 20px; border-top:1px solid var(--paper-line);
+    font-size:13.5px;
+  }
+  .req-row .who{ display:flex; flex-direction:column; gap:2px; }
+  .req-row .who b{ font-weight:600; }
+  .req-row .who span{ color:var(--ink-soft); font-size:12px; }
+  .req-actions{ display:flex; gap:8px; }
+  .req-actions button{
+    font-family:'IBM Plex Sans', sans-serif; font-size:12.5px; font-weight:500;
+    padding:7px 12px; border-radius:7px; cursor:pointer; border:1px solid transparent;
+  }
+  .approve{ background:#dcece0; color:#2f6b41; }
+  .approve:hover{ background:#c9e4d0; }
+  .decline{ background:transparent; color:var(--ink-soft); border-color:var(--paper-line); }
+  .decline:hover{ background:#efece2; }
+  .req-row.done .who{ opacity:.45; }
+  .req-row .verdict{ font-size:12px; font-weight:500; }
+  .req-row .verdict.approved-tag{ color:#2f6b41; }
+
+  /* ---------- modal (bid) ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(36,40,32,0.42);
+    display:none; align-items:center; justify-content:center; z-index:100;
+    padding:20px;
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal{
+    background:var(--card-bg); border-radius:14px; max-width:400px; width:100%;
+    padding:26px 26px 22px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.25);
+  }
+  .modal h3{ font-family:'Fraunces', serif; font-weight:500; font-size:20px; margin:0 0 4px; }
+  .modal .sub{ font-size:13px; color:var(--ink-soft); margin:0 0 18px; }
+  .modal label{ font-size:12px; color:var(--ink-soft); display:block; margin-bottom:6px; }
+  .modal input{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--paper-line);
+    font-family:'IBM Plex Sans', sans-serif; font-size:15px; margin-bottom:16px;
+  }
+  .modal-actions{ display:flex; gap:10px; }
+  .modal-actions button{ flex:1; }
+  .close-x{
+    position:absolute; top:14px; right:16px; background:none; border:none;
+    font-size:18px; cursor:pointer; color:var(--ink-soft); flex:none; padding:4px;
+  }
+  .modal{ position:relative; }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:12px 20px; border-radius:9px;
+    font-size:13.5px; opacity:0; pointer-events:none; transition:all .25s ease;
+    z-index:200; display:flex; align-items:center; gap:8px;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  footer{
+    border-top:1px solid var(--paper-line);
+    padding:26px 28px 40px;
+    max-width:1180px; margin:0 auto;
+    font-size:12px; color:var(--locked);
+  }
+
+  @media (max-width: 760px){
+    .hero{ grid-template-columns:1fr; }
+    .hero-stats{ border-left:none; border-top:1px solid var(--paper-line); padding-left:0; padding-top:18px; flex-direction:row; justify-content:space-between; }
+    .bar{ flex-wrap:wrap; gap:10px; }
+    .detail-grid{ grid-template-columns:1fr !important; }
+  }
+
+  /* ---------- detail page ---------- */
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    background:none; border:none; cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif; font-size:13px; font-weight:500;
+    color:var(--ink-soft); padding:4px 0; margin-bottom:6px;
+  }
+  .back-link:hover{ color:var(--terracotta); }
+  .detail-wrap{ max-width:1180px; margin:0 auto; padding:22px 28px 90px; }
+  .detail-grid{
+    display:grid; grid-template-columns: 1.05fr 0.95fr; gap:34px;
+    margin-top:14px;
+  }
+  .detail-thumb{
+    position:relative;
+    background:
+      linear-gradient(#efe9d8 1px, transparent 1px),
+      linear-gradient(90deg, #efe9d8 1px, transparent 1px),
+      #f9f6ec;
+    background-size:16px 16px;
+    border:1px solid var(--paper-line);
+    border-radius:14px;
+    aspect-ratio: 4 / 3;
+    overflow:hidden;
+  }
+  .detail-thumb svg{ width:100%; height:100%; display:block; }
+  .detail-thumb .badge-locked{
+    position:absolute; top:14px; right:14px;
+    background:rgba(255,255,255,0.9); color:var(--ink-soft);
+    width:34px; height:34px; border-radius:100px;
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+  }
+  .detail-title{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(28px,3.4vw,38px); margin:0 0 4px; letter-spacing:-0.01em; }
+  .detail-sub{ font-size:13.5px; color:var(--ink-soft); margin:0 0 22px; }
+  .detail-headline-stat{ display:flex; gap:26px; margin-bottom:22px; flex-wrap:wrap; }
+  .detail-headline-stat .stat .n{ font-size:24px; }
+
+  .detail-panel{
+    background:var(--card-bg); border:1px solid var(--paper-line); border-radius:14px;
+    overflow:hidden;
+  }
+  .detail-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; border-bottom:1px solid var(--paper-line);
+    font-size:13.5px;
+  }
+  .detail-row:last-child{ border-bottom:none; }
+  .detail-row .label{ color:var(--ink-soft); }
+  .detail-row .value{ font-weight:600; font-family:'IBM Plex Mono', monospace; font-size:13px; }
+  .detail-row.locked .value{ filter:blur(4px); user-select:none; color:var(--locked); }
+  .detail-row .lock-icon{ font-size:12px; margin-left:8px; }
+  .status-pill{ font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:100px; }
+  .status-pill.nieuw{ background:var(--sage-soft); color:var(--sage); }
+  .status-pill.veiling{ background:#f1e2c4; color:#8a641c; }
+  .status-pill.bijna{ background:#f6d9d0; color:#a13f1f; }
+
+  .cta-box{
+    margin-top:18px;
+    background:#f3ece0; border:1px solid #e6d7bd;
+    border-radius:14px; padding:20px 22px;
+  }
+  .cta-box h4{ font-family:'Fraunces', serif; font-weight:500; font-size:18px; margin:0 0 6px; }
+  .cta-box p{ font-size:13.5px; color:var(--ink-soft); margin:0 0 16px; line-height:1.55; }
+  .cta-box button{ width:100%; }
+
+  .pending-note{
+    margin-top:18px;
+    background:#f1e2c4; color:#6b4c15;
+    border-radius:14px; padding:16px 20px; font-size:13.5px;
+    display:flex; align-items:center; gap:10px;
+  }
+
+  .detail-actions{ display:flex; gap:10px; margin-top:20px; }
+  .detail-actions button{ flex:1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="wordmark">
+      <svg class="glyph" viewBox="0 0 26 26" fill="none">
+        <path d="M13 1 L24 7.5 V18.5 L13 25 L2 18.5 V7.5 Z" stroke="#B85C2E" stroke-width="1.6"/>
+        <path d="M13 1 V25 M2 7.5 L24 18.5 M24 7.5 L2 18.5" stroke="#5F7052" stroke-width="0.9" opacity="0.55"/>
+      </svg>
+      <div>
+        PerceelPlein
+        <small>grond, per kavel</small>
+      </div>
+    </div>
+    <div class="account-switcher">
+      <span id="statusChip" class="status-chip guest">Gast — beperkt zicht</span>
+      <div class="role-pills">
+        <button class="role-pill active" data-role="guest">Gast</button>
+        <button class="role-pill" data-role="pending">In afwachting</button>
+        <button class="role-pill" data-role="approved">Goedgekeurd</button>
+        <button class="role-pill" data-role="admin">Beheerder</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div>
+    <h1>Akker of bouwterrein, <em>kavels via PerceelPlein</em>.</h1>
+    <p>PerceelPlein brengt losse grondpercelen uit heel Nederland samen op één plek. Bekijk gemeente, oppervlakte en ligging gratis — vraag een account aan om de exacte kadastrale aanduiding te zien en mee te bieden.</p>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><span class="n" id="statCount">81</span><span class="l">actieve kavels</span></div>
+    <div class="stat"><span class="n" id="statGemeenten">—</span><span class="l">gemeenten</span></div>
+    <div class="stat"><span class="n">100%</span><span class="l">handmatig goedgekeurde bieders</span></div>
+  </div>
+</section>
+
+<div class="banner" id="pendingBanner" style="display:none;">
+  <div class="banner-inner pending">
+    ⏳ &nbsp;<b>Je aanvraag wordt beoordeeld.</b>&nbsp; Zodra een beheerder je account goedkeurt, zie je de volledige kadastrale gegevens en kun je bieden.
+  </div>
+</div>
+
+<div class="banner" id="adminBanner" style="display:none;">
+  <div class="banner-inner admin">
+    🛡️ &nbsp;<b>Beheerdersweergave.</b>&nbsp; Je ziet de kavels zoals een goedgekeurde bieder ze ziet, plus het aanvraagoverzicht hieronder.
+  </div>
+</div>
+
+<div class="admin-panel" id="adminPanel" style="display:none;">
+  <div class="admin-card">
+    <h3>Wachtende accountaanvragen</h3>
+    <div id="requestList"></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a9a196" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" id="searchInput" placeholder="Zoek op gemeente…">
+  </div>
+  <select id="sortSelect">
+    <option value="gemeente">Sorteer: gemeente (A–Z)</option>
+    <option value="opp-desc">Sorteer: grootste kavel eerst</option>
+    <option value="opp-asc">Sorteer: kleinste kavel eerst</option>
+  </select>
+  <div class="count-note"><span id="visibleCount">81</span> kavels weergegeven</div>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="pagination" id="pagination"></div>
+
+<div class="detail-wrap" id="detailView" style="display:none;">
+  <button class="back-link" id="backLink">← Terug naar overzicht</button>
+  <div id="detailContent"></div>
+</div>
+
+<div class="modal-backdrop" id="bidBackdrop">
+  <div class="modal">
+    <button class="close-x" id="closeModal">✕</button>
+    <h3 id="modalTitle">Bod plaatsen</h3>
+    <p class="sub" id="modalSub">Kavel in —</p>
+    <label for="bidInput">Jouw bod (EUR)</label>
+    <input type="number" id="bidInput" placeholder="bijv. 8500">
+    <div class="modal-actions">
+      <button class="secondary" id="cancelBid">Annuleren</button>
+      <button class="primary" id="confirmBid">Bod bevestigen</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  PerceelPlein — demo-omgeving. Kavelvormen zijn illustratief; kadastrale gegevens zijn indicatief en niet bedoeld als officieel uittreksel.
+</footer>
+
+<script>
+const PARCELS = [{"gemeente": "'s-Gravendeel", "sectie": "H", "nummer": 626, "opp": 550}, {"gemeente": "'s-Gravendeel", "sectie": "H", "nummer": 718, "opp": 250}, {"gemeente": "Almere", "sectie": "D", "nummer": 458, "opp": 75}, {"gemeente": "Almere", "sectie": "D", "nummer": 516, "opp": 250}, {"gemeente": "Assendelft", "sectie": "R", "nummer": 603, "opp": 500}, {"gemeente": "Balgoy", "sectie": "B", "nummer": 680, "opp": 460}, {"gemeente": "Balgoy", "sectie": "B", "nummer": 683, "opp": 500}, {"gemeente": "Balk", "sectie": "M", "nummer": 4094, "opp": 495}, {"gemeente": "Bergh", "sectie": "L", "nummer": 902, "opp": 1000}, {"gemeente": "Bergum", "sectie": "I", "nummer": 3032, "opp": 100}, {"gemeente": "Blaricum", "sectie": "C", "nummer": 2952, "opp": 1500}, {"gemeente": "Breda", "sectie": "K", "nummer": 1784, "opp": 300}, {"gemeente": "Breda", "sectie": "L", "nummer": 632, "opp": 401}, {"gemeente": "Broekhuizen", "sectie": "I", "nummer": 12, "opp": 11544}, {"gemeente": "Cuijck", "sectie": "B", "nummer": 3141, "opp": 1000}, {"gemeente": "Deurne", "sectie": "F", "nummer": 2457, "opp": 250}, {"gemeente": "Deurne", "sectie": "F", "nummer": 2458, "opp": 250}, {"gemeente": "Deurne", "sectie": "F", "nummer": 2478, "opp": 250}, {"gemeente": "Deurne", "sectie": "F", "nummer": 2486, "opp": 500}, {"gemeente": "Deurne", "sectie": "F", "nummer": 2487, "opp": 210}, {"gemeente": "Didam", "sectie": "O", "nummer": 1392, "opp": 501}, {"gemeente": "Didam", "sectie": "O", "nummer": 1582, "opp": 251}, {"gemeente": "Dongen", "sectie": "A", "nummer": 5513, "opp": 495}, {"gemeente": "Dongen", "sectie": "A", "nummer": 5523, "opp": 495}, {"gemeente": "Dongen", "sectie": "A", "nummer": 5524, "opp": 495}, {"gemeente": "Dongen", "sectie": "A", "nummer": 5525, "opp": 495}, {"gemeente": "Drachten", "sectie": "B", "nummer": 8677, "opp": 1000}, {"gemeente": "Drachten", "sectie": "B", "nummer": 8678, "opp": 1000}, {"gemeente": "Edam", "sectie": "E", "nummer": 1089, "opp": 350}, {"gemeente": "Eemnes", "sectie": "L", "nummer": 844, "opp": 999}, {"gemeente": "Eemnes", "sectie": "L", "nummer": 849, "opp": 3999}, {"gemeente": "Eemnes", "sectie": "L", "nummer": 855, "opp": 2983}, {"gemeente": "Emmen", "sectie": "AF", "nummer": 1116, "opp": 1500}, {"gemeente": "Etten-Leur", "sectie": "Q", "nummer": 2540, "opp": 1000}, {"gemeente": "Etten-Leur", "sectie": "Q", "nummer": 2541, "opp": 1000}, {"gemeente": "Goirle", "sectie": "A", "nummer": 5262, "opp": 100}, {"gemeente": "Haren", "sectie": "N", "nummer": 978, "opp": 1380}, {"gemeente": "Hoogkerk", "sectie": "A", "nummer": 41, "opp": 2728}, {"gemeente": "Huijbergen", "sectie": "C", "nummer": 3027, "opp": 500}, {"gemeente": "Klaaswaal", "sectie": "C", "nummer": 1324, "opp": 800}, {"gemeente": "Leek", "sectie": "B", "nummer": 3216, "opp": 9370}, {"gemeente": "Leek", "sectie": "B", "nummer": 3293, "opp": 9572}, {"gemeente": "Leek", "sectie": "B", "nummer": 3309, "opp": 3000}, {"gemeente": "Leek", "sectie": "B", "nummer": 3218, "opp": 10000}, {"gemeente": "Lippenhuizen", "sectie": "H", "nummer": 840, "opp": 499}, {"gemeente": "Lochem", "sectie": "AB", "nummer": 473, "opp": 350}, {"gemeente": "Lochem", "sectie": "AB", "nummer": 476, "opp": 350}, {"gemeente": "Medemblik", "sectie": "E", "nummer": 502, "opp": 497}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 303, "opp": 500}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 304, "opp": 500}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 393, "opp": 502}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 394, "opp": 502}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 395, "opp": 502}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 396, "opp": 502}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 397, "opp": 502}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 401, "opp": 1008}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 424, "opp": 500}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 425, "opp": 500}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 553, "opp": 250}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 590, "opp": 500}, {"gemeente": "Zwolle", "sectie": "T", "nummer": 591, "opp": 502}, {"gemeente": "Beesel", "sectie": "O", "nummer": 409, "opp": 750}, {"gemeente": "Neunen", "sectie": "B", "nummer": 5717, "opp": 100}, {"gemeente": "Arum", "sectie": "D", "nummer": 1019, "opp": 250}, {"gemeente": "S'garvenmoer", "sectie": "B", "nummer": 3368, "opp": 250}, {"gemeente": "S'gravenmoer", "sectie": "B", "nummer": 3365, "opp": 250}, {"gemeente": "Beilen", "sectie": "V", "nummer": 1805, "opp": 1532}, {"gemeente": "Leek", "sectie": "H", "nummer": 6864, "opp": 1134}, {"gemeente": "Assendelft", "sectie": "R", "nummer": 462, "opp": 250}, {"gemeente": "Oosterhout", "sectie": "V", "nummer": 1340, "opp": 250}, {"gemeente": "Hoogeveen", "sectie": "Q", "nummer": 504, "opp": 505}, {"gemeente": "Terneuzen", "sectie": "U", "nummer": 1603, "opp": 249}, {"gemeente": "Terneuzen", "sectie": "U", "nummer": 1602, "opp": 249}, {"gemeente": "Eelde", "sectie": "C", "nummer": 2840, "opp": 600}, {"gemeente": "Hellendoorn", "sectie": "S", "nummer": 1266, "opp": 75}, {"gemeente": "Doetinchem", "sectie": "Z", "nummer": 299, "opp": 200}, {"gemeente": "Hellendoorn", "sectie": "B", "nummer": 4488, "opp": 500}, {"gemeente": "Steenwijk", "sectie": "M", "nummer": 837, "opp": 2000}, {"gemeente": "Niedorp", "sectie": "B", "nummer": 1868, "opp": 250}, {"gemeente": "Opmeer", "sectie": "V", "nummer": 842, "opp": 1450}, {"gemeente": "Ransdorp", "sectie": "G", "nummer": 1797, "opp": 1000}];
+PARCELS.forEach((p, i) => { p.id = i; });
+
+// deterministic pseudo-random per parcel, so shapes/orientations stay stable across re-renders
+function seedRandom(seed){
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return function(){ s = s * 16807 % 2147483647; return (s - 1) / 2147483646; };
+}
+function hashStr(str){
+  let h = 0;
+  for (let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) | 0; }
+  return Math.abs(h) || 1;
+}
+
+function parcelShapeSVG(p, idx, locked){
+  const rnd = seedRandom(hashStr(p.gemeente + p.sectie + p.nummer));
+  const cx = 100, cy = 75;
+  const baseR = 46 + rnd()*10;
+  const points = 5 + Math.floor(rnd()*3); // 5-7 sided
+  let pts = [];
+  for (let i=0;i<points;i++){
+    const angle = (Math.PI*2*i/points) - Math.PI/2 + (rnd()-0.5)*0.35;
+    const r = baseR * (0.72 + rnd()*0.36);
+    pts.push([cx + Math.cos(angle)*r*1.5, cy + Math.sin(angle)*r]);
+  }
+  const d = pts.map((pt,i)=> (i===0? 'M':'L') + pt[0].toFixed(1) + ',' + pt[1].toFixed(1)).join(' ') + ' Z';
+  const fill = locked ? '#e4e0d2' : '#DCE3D1';
+  const stroke = locked ? '#b9b3a1' : '#5F7052';
+  const accentDot = locked ? '' : `<circle cx="${cx}" cy="${cy}" r="2.4" fill="#B85C2E"/>`;
+  return `<svg viewBox="0 0 200 150" preserveAspectRatio="xMidYMid meet">
+    <rect x="0" y="0" width="200" height="150" fill="none"/>
+    <path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linejoin="round"/>
+    ${accentDot}
+  </svg>`;
+}
+
+// invented-but-stable "marketplace" details per parcel, for the detail page demo
+function enrichParcel(p){
+  const rnd = seedRandom(hashStr('enrich-' + p.id + p.gemeente + p.nummer));
+  const bids = Math.floor(rnd() * 15);
+  const pricePerM2 = 22 + rnd() * 40;
+  const askingPrice = Math.round((p.opp * pricePerM2) / 50) * 50;
+  const highestBid = bids > 0 ? Math.round(askingPrice * (0.75 + rnd() * 0.3) / 50) * 50 : null;
+  const daysAgo = 1 + Math.floor(rnd() * 55);
+  const statusRoll = rnd();
+  const status = statusRoll < 0.15 ? 'bijna' : (statusRoll < 0.6 ? 'veiling' : 'nieuw');
+  const statusLabel = { nieuw:'Nieuw op PerceelPlein', veiling:'In veiling', bijna:'Sluit binnenkort' }[status];
+  return { bids, askingPrice, highestBid, daysAgo, status, statusLabel };
+}
+
+const PAGE_SIZE = 12;
+const state = { role: 'guest', search: '', sort: 'gemeente', page: 1, view: 'grid', detailIndex: null,
+  requests: [
+    { name:'J. Verbeek', email:'j.verbeek@mail.nl', when:'2 uur geleden', status:'pending' },
+    { name:'S. de Groot', email:'s.degroot@mail.nl', when:'6 uur geleden', status:'pending' },
+    { name:'M. Alaoui', email:'m.alaoui@mail.nl', when:'gisteren', status:'pending' },
+  ]
+};
+
+const roleCopy = {
+  guest:    { chip:'Gast — beperkt zicht', cls:'guest' },
+  pending:  { chip:'In afwachting van goedkeuring', cls:'pending' },
+  approved: { chip:'Goedgekeurd bieder', cls:'approved' },
+  admin:    { chip:'Beheerder', cls:'admin' },
+};
+
+function canSeeDetails(role){ return role === 'approved' || role === 'admin'; }
+function canBid(role){ return role === 'approved' || role === 'admin'; }
+
+function render(){
+  // status chip
+  const chip = document.getElementById('statusChip');
+  const rc = roleCopy[state.role];
+  chip.textContent = rc.chip;
+  chip.className = 'status-chip ' + rc.cls;
+
+  document.querySelectorAll('.role-pill').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.role === state.role);
+  });
+
+  const inDetail = state.view === 'detail';
+
+  document.querySelector('.hero').style.display = inDetail ? 'none' : 'grid';
+  document.querySelector('.toolbar').style.display = inDetail ? 'none' : 'flex';
+  document.getElementById('grid').style.display = inDetail ? 'none' : 'grid';
+  document.getElementById('pagination').style.display = inDetail ? 'none' : 'flex';
+  document.getElementById('detailView').style.display = inDetail ? 'block' : 'none';
+  document.getElementById('pendingBanner').style.display = (!inDetail && state.role === 'pending') ? 'block' : 'none';
+  document.getElementById('adminBanner').style.display = (!inDetail && state.role === 'admin') ? 'block' : 'none';
+  document.getElementById('adminPanel').style.display = (!inDetail && state.role === 'admin') ? 'block' : 'none';
+
+  if (inDetail){
+    renderDetail();
+    return;
+  }
+
+  if (state.role === 'admin') renderRequests();
+
+  // filter + sort
+  let list = PARCELS.filter(p => p.gemeente.toLowerCase().includes(state.search.toLowerCase()));
+  if (state.sort === 'gemeente') list.sort((a,b)=> a.gemeente.localeCompare(b.gemeente));
+  if (state.sort === 'opp-desc') list.sort((a,b)=> b.opp - a.opp);
+  if (state.sort === 'opp-asc') list.sort((a,b)=> a.opp - b.opp);
+
+  document.getElementById('visibleCount').textContent = list.length;
+
+  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+  const pageStart = (state.page - 1) * PAGE_SIZE;
+  const pageList = list.slice(pageStart, pageStart + PAGE_SIZE);
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const unlocked = canSeeDetails(state.role);
+  const biddable = canBid(state.role);
+
+  pageList.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const kadasterLine = unlocked
+      ? `<div class="kadaster-line"><span>Sectie ${p.sectie} · nr. ${p.nummer}</span><span>✓</span></div>`
+      : `<div class="kadaster-line locked"><span class="blur">Sectie ${p.sectie} · nr. ${p.nummer}</span></div>
+         <div class="lock-note">🔒 Zichtbaar na goedkeuring</div>`;
+
+    const ctaHTML = biddable
+      ? `<button class="primary" data-bid="${idx}">Bod plaatsen</button>
+         <button class="secondary" data-open="${p.id}">Bekijk kavel</button>`
+      : state.role === 'pending'
+        ? `<button class="primary" disabled>In afwachting</button>
+           <button class="secondary" data-open="${p.id}">Bekijk kavel</button>`
+        : `<button class="primary" data-signup="1">Registreren</button>
+           <button class="secondary" data-open="${p.id}">Bekijk kavel</button>`;
+
+    card.innerHTML = `
+      <div class="thumb" data-open="${p.id}" style="cursor:pointer;">
+        <span class="badge-num">${p.gemeente} · ${idx+1}</span>
+        ${!unlocked ? '<span class="badge-locked">🔒</span>' : ''}
+        ${parcelShapeSVG(p, idx, !unlocked)}
+      </div>
+      <div class="card-body">
+        <div class="gemeente" data-open="${p.id}" style="cursor:pointer;">${p.gemeente}</div>
+        <div class="meta-row"><span>Oppervlakte</span><span class="opp">${p.opp.toLocaleString('nl-NL')} m²</span></div>
+        ${kadasterLine}
+        <div class="card-cta">${ctaHTML}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll('[data-bid]').forEach(btn=>{
+    btn.addEventListener('click', ()=> openBidModal(pageList[+btn.dataset.bid]));
+  });
+  grid.querySelectorAll('[data-signup]').forEach(btn=>{
+    btn.addEventListener('click', ()=> showToast('Demo: dit zou het aanmeldformulier openen — je account wacht daarna op goedkeuring door een beheerder.'));
+  });
+  grid.querySelectorAll('[data-open]').forEach(el=>{
+    el.addEventListener('click', ()=> openDetail(+el.dataset.open));
+  });
+
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages){
+  const wrap = document.getElementById('pagination');
+  wrap.innerHTML = '';
+  if (totalPages <= 1) return;
+
+  const makeBtn = (label, page, opts={}) => {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (opts.active ? ' active' : '');
+    b.textContent = label;
+    b.disabled = !!opts.disabled;
+    if (!opts.disabled) b.addEventListener('click', ()=>{ state.page = page; render(); document.getElementById('grid').scrollIntoView({behavior:'smooth', block:'start'}); });
+    return b;
+  };
+  const ellipsis = () => { const s = document.createElement('span'); s.className='page-ellipsis'; s.textContent='…'; return s; };
+
+  wrap.appendChild(makeBtn('‹', state.page - 1, { disabled: state.page === 1 }));
+
+  const pagesToShow = new Set([1, totalPages, state.page, state.page - 1, state.page + 1]);
+  let prev = 0;
+  for (let p = 1; p <= totalPages; p++){
+    if (!pagesToShow.has(p)) continue;
+    if (p - prev > 1) wrap.appendChild(ellipsis());
+    wrap.appendChild(makeBtn(String(p), p, { active: p === state.page }));
+    prev = p;
+  }
+
+  wrap.appendChild(makeBtn('›', state.page + 1, { disabled: state.page === totalPages }));
+}
+
+function openDetail(id){
+  state.view = 'detail';
+  state.detailIndex = id;
+  history.pushState(null, '', '#/kavel/' + id);
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closeDetail(){
+  state.view = 'grid';
+  state.detailIndex = null;
+  history.pushState(null, '', '#/');
+  render();
+}
+
+function renderDetail(){
+  const p = PARCELS[state.detailIndex];
+  const wrap = document.getElementById('detailContent');
+  if (!p){ wrap.innerHTML = '<p>Kavel niet gevonden.</p>'; return; }
+
+  const unlocked = canSeeDetails(state.role);
+  const biddable = canBid(state.role);
+  const info = enrichParcel(p);
+
+  const kadasterRow = unlocked
+    ? `<div class="detail-row"><span class="label">Kadastrale aanduiding</span><span class="value">Sectie ${p.sectie} · nr. ${p.nummer}</span></div>`
+    : `<div class="detail-row locked"><span class="label">Kadastrale aanduiding</span><span class="value">Sectie ${p.sectie} · nr. ${p.nummer}<span class="lock-icon">🔒</span></span></div>`;
+
+  const statusRow = unlocked
+    ? `<div class="detail-row"><span class="label">Status</span><span class="status-pill ${info.status}">${info.statusLabel}</span></div>`
+    : `<div class="detail-row locked"><span class="label">Status</span><span class="value">●●●●●●<span class="lock-icon">🔒</span></span></div>`;
+
+  const bidsRow = unlocked
+    ? `<div class="detail-row"><span class="label">Aantal biedingen</span><span class="value">${info.bids}</span></div>`
+    : `<div class="detail-row locked"><span class="label">Aantal biedingen</span><span class="value">●●<span class="lock-icon">🔒</span></span></div>`;
+
+  const priceRow = unlocked
+    ? `<div class="detail-row"><span class="label">${info.highestBid ? 'Hoogste bod' : 'Richtprijs'}</span><span class="value">€ ${(info.highestBid || info.askingPrice).toLocaleString('nl-NL')}</span></div>`
+    : `<div class="detail-row locked"><span class="label">Prijsindicatie</span><span class="value">€ ●●.●●●<span class="lock-icon">🔒</span></span></div>`;
+
+  const listedRow = `<div class="detail-row"><span class="label">Geplaatst</span><span class="value" style="font-family:'IBM Plex Sans',sans-serif;font-weight:500;">${info.daysAgo} dagen geleden</span></div>`;
+
+  let bottomHTML = '';
+  if (state.role === 'guest'){
+    bottomHTML = `
+      <div class="cta-box">
+        <h4>Zie de volledige kavelgegevens</h4>
+        <p>Maak een gratis account aan om de exacte kadastrale aanduiding, veilingstatus en biedhistorie van deze kavel te bekijken. Na goedkeuring door onze beheerder kun je ook direct bieden.</p>
+        <button class="primary" data-signup="1">Registreren</button>
+      </div>`;
+  } else if (state.role === 'pending'){
+    bottomHTML = `
+      <div class="pending-note">⏳ Je aanvraag wordt nog beoordeeld — zodra een beheerder je account goedkeurt, ontgrendelen deze gegevens automatisch.</div>`;
+  } else {
+    bottomHTML = `
+      <div class="detail-actions">
+        <button class="primary" data-bid="detail">Bod plaatsen</button>
+      </div>`;
+  }
+
+  wrap.innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-thumb">
+        ${!unlocked ? '<span class="badge-locked">🔒</span>' : ''}
+        ${parcelShapeSVG(p, p.id, !unlocked)}
+      </div>
+      <div>
+        <h1 class="detail-title">${p.gemeente}</h1>
+        <p class="detail-sub">${unlocked ? `Sectie ${p.sectie} · nr. ${p.nummer} · ` : ''}${p.opp.toLocaleString('nl-NL')} m² kavel</p>
+        <div class="detail-headline-stat">
+          <div class="stat"><span class="n">${p.opp.toLocaleString('nl-NL')}</span><span class="l">m² oppervlakte</span></div>
+          <div class="stat"><span class="n">${unlocked ? '€ ' + (info.highestBid || info.askingPrice).toLocaleString('nl-NL') : '—'}</span><span class="l">${info.highestBid ? 'hoogste bod' : 'richtprijs'}</span></div>
+        </div>
+        <div class="detail-panel">
+          ${kadasterRow}
+          ${statusRow}
+          ${bidsRow}
+          ${priceRow}
+          ${listedRow}
+        </div>
+        ${bottomHTML}
+      </div>
+    </div>
+  `;
+
+  if (biddable){
+    wrap.querySelector('[data-bid="detail"]').addEventListener('click', ()=> openBidModal(p));
+  }
+  const signupBtn = wrap.querySelector('[data-signup]');
+  if (signupBtn) signupBtn.addEventListener('click', ()=> showToast('Demo: dit zou het aanmeldformulier openen — je account wacht daarna op goedkeuring door een beheerder.'));
+}
+
+function renderRequests(){
+  const wrap = document.getElementById('requestList');
+  wrap.innerHTML = '';
+  state.requests.forEach((r, i)=>{
+    const row = document.createElement('div');
+    row.className = 'req-row' + (r.status !== 'pending' ? ' done' : '');
+    row.innerHTML = `
+      <div class="who"><b>${r.name}</b><span>${r.email} · aangevraagd ${r.when}</span></div>
+      ${r.status === 'pending'
+        ? `<div class="req-actions">
+             <button class="approve" data-approve="${i}">Goedkeuren</button>
+             <button class="decline" data-decline="${i}">Afwijzen</button>
+           </div>`
+        : `<div class="verdict ${r.status === 'approved' ? 'approved-tag' : ''}">${r.status === 'approved' ? '✓ Goedgekeurd' : 'Afgewezen'}</div>`
+      }
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-approve]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const i = +btn.dataset.approve;
+      state.requests[i].status = 'approved';
+      showToast(`${state.requests[i].name} is goedgekeurd en kan nu bieden.`);
+      render();
+    });
+  });
+  wrap.querySelectorAll('[data-decline]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const i = +btn.dataset.decline;
+      state.requests[i].status = 'declined';
+      showToast(`Aanvraag van ${state.requests[i].name} afgewezen.`);
+      render();
+    });
+  });
+}
+
+let activeBidParcel = null;
+function openBidModal(p){
+  activeBidParcel = p;
+  document.getElementById('modalSub').textContent = `${p.gemeente} — sectie ${p.sectie}, nr. ${p.nummer} · ${p.opp.toLocaleString('nl-NL')} m²`;
+  document.getElementById('bidInput').value = '';
+  document.getElementById('bidBackdrop').classList.add('open');
+}
+document.getElementById('closeModal').addEventListener('click', ()=> document.getElementById('bidBackdrop').classList.remove('open'));
+document.getElementById('cancelBid').addEventListener('click', ()=> document.getElementById('bidBackdrop').classList.remove('open'));
+document.getElementById('confirmBid').addEventListener('click', ()=>{
+  const val = document.getElementById('bidInput').value;
+  document.getElementById('bidBackdrop').classList.remove('open');
+  if (val) showToast(`Bod van €${Number(val).toLocaleString('nl-NL')} geplaatst op kavel in ${activeBidParcel.gemeente}.`);
+});
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 3400);
+}
+
+document.querySelectorAll('.role-pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ state.role = btn.dataset.role; state.page = 1; render(); });
+});
+document.getElementById('searchInput').addEventListener('input', (e)=>{ state.search = e.target.value; state.page = 1; render(); });
+document.getElementById('sortSelect').addEventListener('change', (e)=>{ state.sort = e.target.value; state.page = 1; render(); });
+
+document.getElementById('backLink').addEventListener('click', closeDetail);
+
+window.addEventListener('popstate', ()=>{
+  const m = location.hash.match(/#\/kavel\/(\d+)/);
+  if (m && PARCELS[+m[1]]){ state.view = 'detail'; state.detailIndex = +m[1]; }
+  else { state.view = 'grid'; state.detailIndex = null; }
+  render();
+});
+
+document.getElementById('statGemeenten').textContent = new Set(PARCELS.map(p=>p.gemeente)).size;
+
+// open directly to a kavel if the page was loaded/shared with a #/kavel/<id> link
+(function initFromHash(){
+  const m = location.hash.match(/#\/kavel\/(\d+)/);
+  if (m && PARCELS[+m[1]]){ state.view = 'detail'; state.detailIndex = +m[1]; }
+})();
+render();
+</script>
+</body>
+</html>
